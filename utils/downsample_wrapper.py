@@ -12,7 +12,7 @@ class MaxAndSkipEnv(gym.Wrapper):
         self._obs_buffer = deque(maxlen=2)
         self._skip       = skip
 
-    def _step(self, action):
+    def step(self, action):
         total_reward = 0.0
         done = None
         for _ in range(self._skip):
@@ -26,7 +26,7 @@ class MaxAndSkipEnv(gym.Wrapper):
 
         return max_frame, total_reward, done, info
 
-    def _reset(self):
+    def reset(self):
         """Clear past frame buffer and init. to first obs. from inner env."""
         self._obs_buffer.clear()
         obs = self.env.reset()

@@ -36,7 +36,7 @@ def dqn_learn(
     replay_buffer_size=1000000,
     batch_size=32,
     gamma=0.99,
-    learning_starts=50000,
+    learning_starts=500,
     learning_freq=4,
     frame_history_len=4,
     target_update_freq=10000
@@ -44,19 +44,20 @@ def dqn_learn(
 
 	img_h, img_w, img_c = env.observation_space.shape
 	input_arg = frame_history_len * img_c
-	num_actions = env.action_space.n
+	num_actions = 11
 
 
 	def epsilon_greedy_action(model, obs, t):
 		sample = random.random()
 		eps = exploration.value(t)
 		if sample > eps:
+
 			obs = torch.from_numpy(obs).type(dtype).unsqueeze(0)/255.0
 
-			return model(Variable(obs, volatile=True)).data.max(1)[1].view(-1,1).cpu()
+			return model(Variable(obs)).data.max(1)[1].view(-1,1).cpu()
 
 		else:
-			return torch.IntTensor([[random.randrange(num_actions)]])
+			return torch.IntTensor([[random.randrange(num_actions)]]).cpu()
 
 	Q = q_func(input_arg,num_actions).type(dtype)
 	target_Q = q_func(input_arg,num_actions).type(dtype)
@@ -91,9 +92,14 @@ def dqn_learn(
 		recent_obs = replay_buffer.encode_recent_observation()
 
 		if t > learning_starts:
-			action = epsilon_greedy_action(Q,recent_obs,t)[0, 0]
+			#print("epsilon Greedy action")
+			action = epsilon_greedy_action(Q,recent_obs,t).numpy()[0,0]
+			##print(action)
 		else:
 			action = random.randrange(num_actions)
+
+		#print("to do action... ")
+		#print(action)
 
 		obs, reward, done, _ = env.step(action)
 
@@ -108,6 +114,7 @@ def dqn_learn(
 		if (t > learning_starts and
 			t % learning_freq == 0 and
 			replay_buffer.can_sample(batch_size)):
+			##print("Learning in t: %d",t)
             # Use the replay buffer to sample a batch of transitions
             # Note: done_mask[i] is 1 if the next state corresponds to the end of an episode,
             # in which case there is no Q-value at the next state; at the end of an
@@ -163,6 +170,7 @@ def dqn_learn(
 			num_param_updates += 1
 
             # Periodically update the target network by Q network to target Q network
+			##print("num updates %d",num_param_updates)
 			if num_param_updates % target_update_freq == 0:
 				target_Q.load_state_dict(Q.state_dict())
 

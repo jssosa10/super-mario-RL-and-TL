@@ -9,6 +9,7 @@ class DQN(nn.Module):
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
         self.fc4 = nn.Linear(7 * 7 * 64, 512)
         self.fc5 = nn.Linear(512, num_actions)
+        self._initialize_weights()
     
     def forward(self, x):
         x = F.relu(self.conv1(x))
@@ -16,3 +17,10 @@ class DQN(nn.Module):
         x = F.relu(self.conv3(x))
         x = F.relu(self.fc4(x.view(x.size(0), -1)))
         return self.fc5(x)
+
+    def _initialize_weights(self):
+        for module in self.modules():
+            if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
+                nn.init.xavier_uniform_(module.weight)
+                # nn.init.kaiming_uniform_(module.weight)
+                nn.init.constant_(module.bias, 0)

@@ -4,13 +4,14 @@ import gym
 from gym import spaces
 from PIL import Image
 
+
 class MaxAndSkipEnv(gym.Wrapper):
     def __init__(self, env=None, skip=4):
         """Return only every `skip`-th frame"""
         super(MaxAndSkipEnv, self).__init__(env)
         # most recent raw observations (for max pooling across time steps)
         self._obs_buffer = deque(maxlen=2)
-        self._skip       = skip
+        self._skip = skip
 
     def step(self, action):
         total_reward = 0.0
@@ -33,6 +34,7 @@ class MaxAndSkipEnv(gym.Wrapper):
         self._obs_buffer.append(obs)
         return obs
 
+
 def _process_frame84(frame):
     img = np.reshape(frame, [240, 256, 3]).astype(np.float32)
     img = img[:, :, 0] * 0.299 + img[:, :, 1] * 0.587 + img[:, :, 2] * 0.114
@@ -41,8 +43,9 @@ def _process_frame84(frame):
     resized_screen = np.array(resized_screen)
     x_t = resized_screen[18:102, :]
     x_t = np.reshape(x_t, [84, 84, 1])
-    ##print(x_t.shape)
+    # print(x_t.shape)
     return x_t.astype(np.uint8)
+
 
 class ProcessFrame84(gym.Wrapper):
     def __init__(self, env=None):
@@ -56,8 +59,9 @@ class ProcessFrame84(gym.Wrapper):
     def reset(self):
         return _process_frame84(self.env.reset())
 
+
 def wrap_deepmind(env):
-    env = MaxAndSkipEnv(env, skip=4)	
+    env = MaxAndSkipEnv(env, skip=4)
     env = ProcessFrame84(env)
-    print(env)
+    # print(env)
     return env

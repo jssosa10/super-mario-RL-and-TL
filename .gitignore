@@ -125,3 +125,7 @@ dmypy.json
 .pyre/s
 
 Game Video/
+
+*.pkl
+
+.vscode/

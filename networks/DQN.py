@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class DQN(nn.Module):
     def __init__(self, in_channels=4, num_actions=18):
         super(DQN, self).__init__()
@@ -10,7 +11,7 @@ class DQN(nn.Module):
         self.fc4 = nn.Linear(7 * 7 * 64, 512)
         self.fc5 = nn.Linear(512, num_actions)
         self._initialize_weights()
-    
+
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))

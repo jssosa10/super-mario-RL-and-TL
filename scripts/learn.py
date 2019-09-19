@@ -5,12 +5,13 @@ import numpy as np
 from collections import namedtuple
 from itertools import count
 import random
+from torch.utils.tensorboard import SummaryWriter
 
 import torch
 import torch.nn.functional as F
 import torch.autograd as autograd
 
-from utils.replay_buffer import ReplayBuffer
+from utils.ReplayBuffer import PrioritizedReplayBuffer
 
 USE_CUDA = torch.cuda.is_available()
 print(USE_CUDA)
@@ -37,16 +38,17 @@ def dqn_learn(
     q_func,
     optimizer_spec,
     exploration,
+    annelation,
     replay_buffer_size=1000000,
     batch_size=32,
     gamma=0.99,
     learning_starts=500,
     learning_freq=4,
-    frame_history_len=4,
+    alpha=0.6,
         target_update_freq=10000):
 
     img_h, img_w, img_c = env.observation_space.shape
-    input_arg = frame_history_len * img_c
+    input_arg = img_c
     num_actions = env.action_space.n
 
     def epsilon_greedy_action(model, obs, t):
@@ -73,24 +75,25 @@ def dqn_learn(
             target.load_state_dict(torch.load('mario_target_Q_params.pkl'))
         return model, target
 
-    def get_batch():
+    def get_batch(t):
         # Use the replay buffer to sample a batch of transitions
         # Note: done_mask[i] is 1 if the next state corresponds to the end of an episode,
         # in which case there is no Q-value at the next state; at the end of an
         # episode, only the current state reward contributes to the target
-        obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = replay_buffer.sample(batch_size)
+        obs_batch, act_batch, rew_batch, next_obs_batch, done_mask, weights, indxes = replay_buffer.sample(batch_size, annelation.value(t))
         # Convert numpy nd_array to torch variables for calculation
         obs_batch = Variable(torch.from_numpy(obs_batch).type(dtype) / 255.0)
         act_batch = Variable(torch.from_numpy(act_batch).long())
-        rew_batch = Variable(torch.from_numpy(rew_batch))
+        rew_batch = Variable(torch.from_numpy(rew_batch).type(dtype))
         next_obs_batch = Variable(torch.from_numpy(next_obs_batch).type(dtype) / 255.0)
         not_done_mask = Variable(torch.from_numpy(1 - done_mask)).type(dtype)
+        weights = Variable(torch.from_numpy(weights).type(dtype))
 
         if USE_CUDA:
             act_batch = act_batch.cuda()
             rew_batch = rew_batch.cuda()
 
-        return obs_batch, act_batch, rew_batch, next_obs_batch, not_done_mask
+        return obs_batch, act_batch, rew_batch, next_obs_batch, not_done_mask, weights, indxes
 
     def save_info(LOG_EVERY_N_STEPS, t, mean_episode_reward, best_mean_episode_reward):
         episode_rewards = env.get_episode_rewards()
@@ -118,8 +121,8 @@ def dqn_learn(
                 print("Saved to %s" % 'statistics.pkl')
         return mean_episode_reward, best_mean_episode_reward
 
-    def train_step(model, target, num_param_updates):
-        obs_batch, act_batch, rew_batch, next_obs_batch, not_done_mask = get_batch()
+    def train_step(model, target, num_param_updates, t, writer):
+        obs_batch, act_batch, rew_batch, next_obs_batch, not_done_mask, weights, indxes = get_batch(t)
 
         # Compute current Q value, q_func takes only state and output value for every state-action pair
         # We choose Q based on action taken.
@@ -138,6 +141,9 @@ def dqn_learn(
         # Compute the target of the current Q values
         target_Q_values = rew_batch.view(-1, 1) + (gamma * next_Q_values)
 
+        # compute td error
+        td_error = current_Q_values.data.cpu().numpy()-target_Q_values.data.cpu().numpy()
+
         """
         # Compute Bellman error
         bellman_error = target_Q_values - current_Q_values
@@ -150,13 +156,17 @@ def dqn_learn(
         # run backward pass
         current_Q_values.backward(d_error.data)
         """
-        loss = F.smooth_l1_loss(current_Q_values, target_Q_values)
+        loss = F.mse_loss(current_Q_values, target_Q_values)
+        loss = loss*weights
+        loss = torch.mean(loss)
+        writer.add_scalar('Loss', loss, t)
         optimizer.zero_grad()
         loss.backward()
         for param in model.parameters():
             param.grad.data.clamp(-1, 1)
         # Perfom the update
         optimizer.step()
+        replay_buffer.update_priorities(indxes, abs(td_error))
         return num_param_updates+1
 
     Q, target_Q = create_networks()
@@ -166,7 +176,9 @@ def dqn_learn(
     optimizer = optimizer_spec.constructor(Q.parameters(), **optimizer_spec.kwargs)
 
     # Construct the replay buffer
-    replay_buffer = ReplayBuffer(replay_buffer_size, frame_history_len)
+    replay_buffer = PrioritizedReplayBuffer(replay_buffer_size, alpha)
+
+    writer = SummaryWriter()
 
     last_obs = env.reset()
 
@@ -178,39 +190,29 @@ def dqn_learn(
 
     for t in count():
 
-        last_idx = replay_buffer.store_frame(last_obs)
-
-        recent_obs = replay_buffer.encode_recent_observation()
-
         if t > learning_starts:
-            # print("epsilon Greedy action")
-            action = epsilon_greedy_action(Q, recent_obs, t).numpy()[0, 0]
-            # print(action)
+            action = epsilon_greedy_action(Q, last_obs.transpose(2, 0, 1), t).numpy()[0, 0]
         else:
             action = random.randrange(num_actions)
-
-        # print("to do action... ")
-        # print(action)
 
         obs, reward, done, _ = env.step(action)
 
         reward = max(-1.0, min(reward, 1.0))
 
-        replay_buffer.store_effect(last_idx, action, reward, done)
+        replay_buffer.add(last_obs, action, reward, obs, done)
 
         if done:
             obs = env.reset()
         last_obs = obs
 
         if (t > learning_starts and
-            t % learning_freq == 0 and
-                replay_buffer.can_sample(batch_size)):
+                t % learning_freq == 0):
 
-            num_param_updates = train_step(Q, target_Q, num_param_updates)
+            num_param_updates = train_step(Q, target_Q, num_param_updates, t, writer)
 
             # Periodically update the target network by Q network to target Q network
-            # print("num updates %d",num_param_updates)
             if num_param_updates % target_update_freq == 0:
                 target_Q.load_state_dict(Q.state_dict())
 
         mean_episode_reward, best_mean_episode_reward = save_info(LOG_EVERY_N_STEPS, t, mean_episode_reward, best_mean_episode_reward)
+        writer.add_scalar('Mean Reward', mean_episode_reward, t)

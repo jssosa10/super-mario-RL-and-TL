@@ -22,6 +22,7 @@ FRAME_HISTORY_LEN = 4
 TARGER_UPDATE_FREQ = 3000
 LEARNING_RATE = 0.00025
 ALPHA = 0.95
+ALPHA_P = 0.6
 EPS = 0.01
 
 env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
@@ -41,6 +42,7 @@ optimizer_spec = OptimizerSpec(
 )
 
 exploration_schedule = LinearSchedule(1000000, 0.1, 0.4)
+annelation_schedule = LinearSchedule(1000000, 1.0, 0.4)
 
 dqn_learn(
     env=env,
@@ -52,6 +54,7 @@ dqn_learn(
     gamma=GAMMA,
     learning_starts=LEARNING_STARTS,
     learning_freq=LEARNING_FREQ,
-    frame_history_len=FRAME_HISTORY_LEN,
+    alpha=ALPHA_P,
+    annelation=annelation_schedule,
     target_update_freq=TARGER_UPDATE_FREQ,
 )

@@ -16,9 +16,10 @@ class Variable(autograd.Variable):
             data = data.cuda()
         super(Variable, self).__init__(data, *args, **kwargs)
 
+
 def dqn_play(
-	env,
-	q_func):
+    env,
+        q_func):
 
     img_h, img_w, img_c = env.observation_space.shape
     input_arg = img_c

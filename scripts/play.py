@@ -41,7 +41,7 @@ def dqn_play(
 
     for t in count():
 
-        action = get_action(Q, obs.transpose(2, 0, 1))
+        action = get_action(Q, obs.transpose(2, 0, 1)).numpy()[0, 0]
 
         obs, reward, done, _ = env.step(action)
 

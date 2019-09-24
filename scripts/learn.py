@@ -99,8 +99,14 @@ def dqn_learn(
         episode_rewards = env.get_episode_rewards()
         if len(episode_rewards) > 0:
             mean_episode_reward = np.mean(episode_rewards[-100:])
+
         if len(episode_rewards) > 100:
             best_mean_episode_reward = max(best_mean_episode_reward, mean_episode_reward)
+
+        if(mean_episode_reward >= best_mean_episode_reward)
+            print("best reward saved: %f", best_mean_episode_reward)
+            torch.save(Q.state_dict(), 'mario_Q_params.pkl')
+            torch.save(target_Q.state_dict(), 'mario_target_Q_params.pkl')
 
         Statistic["mean_episode_rewards"].append(mean_episode_reward)
         Statistic["best_mean_episode_rewards"].append(best_mean_episode_reward)
@@ -111,8 +117,6 @@ def dqn_learn(
             print("best mean reward %f" % best_mean_episode_reward)
             print("episodes %d" % len(episode_rewards))
             print("exploration %f" % exploration.value(t))
-            torch.save(Q.state_dict(), 'mario_Q_params.pkl')
-            torch.save(target_Q.state_dict(), 'mario_target_Q_params.pkl')
             sys.stdout.flush()
 
             # Dump statistics to pickle
@@ -166,7 +170,7 @@ def dqn_learn(
             param.grad.data.clamp(-1, 1)
         # Perfom the update
         optimizer.step()
-        replay_buffer.update_priorities(indxes, abs(td_error))
+        replay_buffer.update_priorities(indxes, abs(td_error)+1e-09)
         return num_param_updates+1
 
     Q, target_Q = create_networks()

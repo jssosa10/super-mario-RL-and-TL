@@ -100,13 +100,13 @@ def dqn_learn(
         if len(episode_rewards) > 0:
             mean_episode_reward = np.mean(episode_rewards[-100:])
 
-        if len(episode_rewards) > 100:
-            best_mean_episode_reward = max(best_mean_episode_reward, mean_episode_reward)
-
-        if(mean_episode_reward >= best_mean_episode_reward and mean_episode_reward > 0 and best_mean_episode_reward > 0):
+        if(mean_episode_reward > best_mean_episode_reward and mean_episode_reward > 0 and best_mean_episode_reward > 0):
             print("best reward saved: %f", best_mean_episode_reward)
             torch.save(Q.state_dict(), 'mario_Q_params.pkl')
             torch.save(target_Q.state_dict(), 'mario_target_Q_params.pkl')
+
+        if len(episode_rewards) > 100:
+            best_mean_episode_reward = max(best_mean_episode_reward, mean_episode_reward)
 
         Statistic["mean_episode_rewards"].append(mean_episode_reward)
         Statistic["best_mean_episode_rewards"].append(best_mean_episode_reward)

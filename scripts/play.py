@@ -28,7 +28,7 @@ def dqn_play(
     def load_model(model):
         if os.path.isfile('mario_Q_params.pkl'):
             print('Load Q parametets ...')
-            model.load_state_dict(torch.load('mario_Q_params.pkl'))
+            model.load_state_dict(torch.load('mario_Q_params.pkl', torch.device('cpu')))
         return model
 
     def get_action(model, obs):

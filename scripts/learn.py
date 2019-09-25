@@ -1,5 +1,5 @@
 import sys
-import pickle
+# import pickle
 import os
 import numpy as np
 from collections import namedtuple
@@ -27,10 +27,10 @@ class Variable(autograd.Variable):
 
 OptimizerSpec = namedtuple("OptimizerSpec", ["constructor", "kwargs"])
 
-Statistic = {
-    "mean_episode_rewards": [],
-    "best_mean_episode_rewards": []
-}
+# Statistic = {
+#    "mean_episode_rewards": [],
+#    "best_mean_episode_rewards": []
+# }
 
 
 def dqn_learn(
@@ -108,8 +108,8 @@ def dqn_learn(
         if len(episode_rewards) > 100:
             best_mean_episode_reward = max(best_mean_episode_reward, mean_episode_reward)
 
-        Statistic["mean_episode_rewards"].append(mean_episode_reward)
-        Statistic["best_mean_episode_rewards"].append(best_mean_episode_reward)
+        # Statistic["mean_episode_rewards"].append(mean_episode_reward)
+        # Statistic["best_mean_episode_rewards"].append(best_mean_episode_reward)
 
         if t % LOG_EVERY_N_STEPS == 0 and t > learning_starts:
             print("Timestep %d" % (t,))
@@ -120,9 +120,9 @@ def dqn_learn(
             sys.stdout.flush()
 
             # Dump statistics to pickle
-            with open('statistics.pkl', 'wb') as f:
-                pickle.dump(Statistic, f)
-                print("Saved to %s" % 'statistics.pkl')
+            # with open('statistics.pkl', 'wb') as f:
+            #   pickle.dump(Statistic, f)
+            #    print("Saved to %s" % 'statistics.pkl')
         return mean_episode_reward, best_mean_episode_reward
 
     def train_step(model, target, num_param_updates, t, writer):

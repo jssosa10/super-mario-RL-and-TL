@@ -40,8 +40,8 @@ optimizer_spec = OptimizerSpec(
     kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS),
 )
 
-exploration_schedule = LinearSchedule(1000000, 0.1, 0.85)
-annelation_schedule = LinearSchedule(1000000, 1.0, 0.4)
+exploration_schedule = LinearSchedule(2000000, 0.1, 0.9)
+annelation_schedule = LinearSchedule(2000000, 1.0, 0.4)
 
 dqn_learn(
     env=env,

@@ -129,3 +129,5 @@ Game Video/
 *.pkl
 
 .vscode/
+
+/data

@@ -17,7 +17,7 @@ for step in range(500):
         state = env.reset()
     print(env.action_space.n)
     state, reward, done, info = env.step(env.action_space.sample())
-    ##print(state.shape)
-    ##env.render()
+    # print(state.shape)
+    # env.render()
 
 env.close()

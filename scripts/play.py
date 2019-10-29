@@ -6,7 +6,7 @@ import torch.autograd as autograd
 
 
 USE_CUDA = torch.cuda.is_available()
-print(USE_CUDA)
+# print(USE_CUDA)
 dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
 
 

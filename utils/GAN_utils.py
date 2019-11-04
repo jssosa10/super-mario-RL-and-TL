@@ -1,7 +1,10 @@
+import glob
 import random
-import time
-import datetime
-import sys
+import os
+
+from torch.utils.data import Dataset
+from PIL import Image
+import torchvision.transforms as transforms
 
 from torch.autograd import Variable
 import torch
@@ -11,7 +14,7 @@ import numpy as np
 def tensor2image(tensor):
     image = 127.5*(tensor[0].cpu().float().numpy() + 1.0)
     if image.shape[0] == 1:
-        image = np.tile(image, (3,1,1))
+        image = np.tile(image, (3, 1, 1))
     return image.astype(np.uint8)
 
 
@@ -29,7 +32,7 @@ class ReplayBuffer():
                 self.data.append(element)
                 to_return.append(element)
             else:
-                if random.uniform(0,1) > 0.5:
+                if random.uniform(0, 1) > 0.5:
                     i = random.randint(0, self.max_size-1)
                     to_return.append(self.data[i].clone())
                     self.data[i] = element
@@ -56,3 +59,25 @@ def weights_init_normal(m):
     elif classname.find('BatchNorm2d') != -1:
         torch.nn.init.normal(m.weight.data, 1.0, 0.02)
         torch.nn.init.constant(m.bias.data, 0.0)
+
+
+class ImageDataset(Dataset):
+    def __init__(self, root, transforms_=None, unaligned=False, mode='train'):
+        self.transform = transforms.Compose(transforms_)
+        self.unaligned = unaligned
+
+        self.files_X = sorted(glob.glob(os.path.join(root, '%s/X' % mode) + '/*.*'))
+        self.files_Y = sorted(glob.glob(os.path.join(root, '%s/Y' % mode) + '/*.*'))
+
+    def __getitem__(self, index):
+        item_X = self.transform(Image.open(self.files_X[index % len(self.files_X)]))
+
+        if self.unaligned:
+            item_Y = self.transform(Image.open(self.files_Y[random.randint(0, len(self.files_Y) - 1)]))
+        else:
+            item_Y = self.transform(Image.open(self.files_Y[index % len(self.files_Y)]))
+
+        return {'X': item_X, 'Y': item_Y}
+
+    def __len__(self):
+        return max(len(self.files_X), len(self.files_Y))

@@ -131,3 +131,5 @@ Game Video/
 .vscode/
 
 /data
+/runs
+/output

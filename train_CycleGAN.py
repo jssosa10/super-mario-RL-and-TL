@@ -17,19 +17,19 @@ from torch.utils.tensorboard import SummaryWriter
 # Define HyperParameters
 USE_CUDA = torch.cuda.is_available()
 N_CHANNELS = 1
-N_EPOCHS = 200
-BATCH_SIZE = 1
+N_EPOCHS = 50
+BATCH_SIZE = 10
 LR = 0.0002
-DECAY_EPOCH = 100
+DECAY_EPOCH = 25
 SIZE = 84
-N_CPU = 8
+N_CPU = 12
 EPOCH = 0
 
 # Define networks
 netG_X2Y = Generator(N_CHANNELS, N_CHANNELS)
 netG_Y2X = Generator(N_CHANNELS, N_CHANNELS)
-netD_X = Discriminator(N_CHANNELS, N_CHANNELS)
-netD_Y = Discriminator(N_CHANNELS, N_CHANNELS)
+netD_X = Discriminator(N_CHANNELS)
+netD_Y = Discriminator(N_CHANNELS)
 
 # use cuda
 if USE_CUDA:
@@ -70,11 +70,12 @@ fake_X_buffer = ReplayBuffer()
 fake_Y_buffer = ReplayBuffer()
 
 # Dataset loader
-transforms_ = [transforms.Resize(int(SIZE*1.12), Image.BICUBIC),
+transforms_ = [transforms.Grayscale(num_output_channels = 1),
+               transforms.Resize(int(SIZE*1.12), Image.BICUBIC),
                transforms.RandomCrop(SIZE),
                transforms.RandomHorizontalFlip(),
                transforms.ToTensor(),
-               transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+               transforms.Normalize([0.5], [0.5])]
 
 dataloader = DataLoader(ImageDataset("data", transforms_=transforms_, unaligned=True),
                         batch_size=BATCH_SIZE, shuffle=True, num_workers=N_CPU)
@@ -84,7 +85,9 @@ writer = SummaryWriter()
 
 # Training ######
 for epoch in range(EPOCH, N_EPOCHS):
+    print(epoch)
     for i, batch in enumerate(dataloader):
+        print(i)
         # Set model input
         real_X = Variable(input_X.copy_(batch['X']))
         real_Y = Variable(input_Y.copy_(batch['Y']))

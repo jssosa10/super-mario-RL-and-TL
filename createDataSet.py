@@ -10,8 +10,8 @@ env = wrap_deepmind(env)
 env = JoypadSpace(env, COMPLEX_MOVEMENT)
 
 done = True
-os.chdir("/home/jssosa10/super-mario-RL-and-TL/data/1-1")
-for step in range(100000):
+os.chdir("data/1-1")
+for step in range(5000):
     if done:
         state = env.reset()
     state, reward, done, info = env.step(env.action_space.sample())
@@ -24,14 +24,14 @@ for step in range(100000):
     img.save("step"+str(step)+".jpg")
 
 env.close()
-
+os.chdir("../..")
 env = gym_super_mario_bros.make('SuperMarioBros-1-2-v1')
 env = wrap_deepmind(env)
 env = JoypadSpace(env, COMPLEX_MOVEMENT)
 
 done = True
-os.chdir("/home/jssosa10/super-mario-RL-and-TL/data/1-2")
-for step in range(100000):
+os.chdir("data/1-2")
+for step in range(5000):
     if done:
         state = env.reset()
     state, reward, done, info = env.step(env.action_space.sample())

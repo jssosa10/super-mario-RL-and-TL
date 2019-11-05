@@ -7,13 +7,13 @@ from torch.utils.data import DataLoader
 from torch.autograd import Variable
 import torch
 
-from models import Generator
-from datasets import ImageDataset
+from networks.CycleGan import Generator
+from utils.GAN_utils import ImageDataset
 
 USE_CUDA = torch.cuda.is_available()
 N_CHANNELS = 1
 N_EPOCHS = 50
-BATCH_SIZE = 10
+BATCH_SIZE = 1
 LR = 0.0002
 DECAY_EPOCH = 25
 SIZE = 84
@@ -58,6 +58,10 @@ if not os.path.exists('output/X'):
     os.makedirs('output/X')
 if not os.path.exists('output/Y'):
     os.makedirs('output/Y')
+if not os.path.exists('output/X_REAL'):
+    os.makedirs('output/X_REAL')
+if not os.path.exists('output/Y_REAL'):
+    os.makedirs('output/Y_REAL')
 
 for i, batch in enumerate(dataloader):
     # Set model input
@@ -70,7 +74,9 @@ for i, batch in enumerate(dataloader):
 
     # Save image files
     save_image(fake_X, 'output/X/%04d.png' % (i+1))
+    save_image(real_X, 'output/X_REAL/%04d.png' % (i+1))
     save_image(fake_Y, 'output/Y/%04d.png' % (i+1))
+    save_image(real_Y, 'output/Y_REAL/%04d.png' % (i+1))
 
     sys.stdout.write('\rGenerated images %04d of %04d' % (i+1, len(dataloader)))
 

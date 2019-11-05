@@ -70,7 +70,7 @@ fake_X_buffer = ReplayBuffer()
 fake_Y_buffer = ReplayBuffer()
 
 # Dataset loader
-transforms_ = [transforms.Grayscale(num_output_channels = 1),
+transforms_ = [transforms.Grayscale(num_output_channels=1),
                transforms.Resize(int(SIZE*1.12), Image.BICUBIC),
                transforms.RandomCrop(SIZE),
                transforms.RandomHorizontalFlip(),

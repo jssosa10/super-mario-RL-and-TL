@@ -13,7 +13,7 @@ import random
 
 SEED = 1
 
-env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
+env = gym_super_mario_bros.make('SuperMarioBros-1-1-v1')
 env.seed(SEED)
 torch.manual_seed(SEED)
 np.random.seed(SEED)

@@ -13,13 +13,13 @@ import numpy as np
 import random
 
 SEED = 1
-BATCH_SIZE = 32
+BATCH_SIZE = 512
 GAMMA = 0.99
 REPLAY_BUFFER_SIZE = 100000
 LEARNING_STARTS = 50000
 LEARNING_FREQ = 4
 TARGER_UPDATE_FREQ = 10000
-LEARNING_RATE = 0.00025
+LEARNING_RATE = 0.00075
 ALPHA = 0.95
 ALPHA_P = 0.6
 EPS = 0.01
@@ -33,15 +33,15 @@ random.seed(SEED)
 env = wrap_deepmind(env)
 env = JoypadSpace(env, COMPLEX_MOVEMENT)
 expt_dir = 'Game_video'
-env = wrappers.Monitor(env, expt_dir, force=True, video_callable=lambda episode_id: True)
+env = wrappers.Monitor(env, expt_dir, force=True, video_callable=False)
 
 optimizer_spec = OptimizerSpec(
     constructor=optim.RMSprop,
     kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS),
 )
 
-exploration_schedule = LinearSchedule(2000000, 0.01, 0.01)
-annelation_schedule = LinearSchedule(2000000, 1.0, 0.4)
+exploration_schedule = LinearSchedule(4000000, 0.05, 0.05)
+annelation_schedule = LinearSchedule(4000000, 1.0, 0.4)
 
 dqn_learn(
     env=env,

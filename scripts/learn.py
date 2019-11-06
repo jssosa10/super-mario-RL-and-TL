@@ -100,13 +100,11 @@ def dqn_learn(
         if len(episode_rewards) > 0:
             mean_episode_reward = np.mean(episode_rewards[-100:])
 
-        if(mean_episode_reward > best_mean_episode_reward and mean_episode_reward > 0 and best_mean_episode_reward > 0):
-            print("best reward saved: %f", best_mean_episode_reward)
-            torch.save(Q.state_dict(), 'mario_Q_params.pkl')
-            torch.save(target_Q.state_dict(), 'mario_target_Q_params.pkl')
-
-        if len(episode_rewards) > 100:
-            best_mean_episode_reward = max(best_mean_episode_reward, mean_episode_reward)
+        if(mean_episode_reward > best_mean_episode_reward and mean_episode_reward > 0 and best_mean_episode_reward > 0 and len(episode_rewards) > 100):
+            print("best reward saved: %f", mean_episode_reward)
+            torch.save(Q.state_dict(), 'nets/mario_Q_params_{}.pkl'.format((int(mean_episode_reward))))
+            torch.save(target_Q.state_dict(), 'nets/mario_target_Q_params_{}.pkl'.format((int(mean_episode_reward))))
+            best_mean_episode_reward = max(best_mean_episode_reward, mean_episode_reward)            
 
         # Statistic["mean_episode_rewards"].append(mean_episode_reward)
         # Statistic["best_mean_episode_rewards"].append(best_mean_episode_reward)
@@ -200,8 +198,6 @@ def dqn_learn(
             action = random.randrange(num_actions)
 
         obs, reward, done, _ = env.step(action)
-
-        reward = max(-1.0, min(reward, 1.0))
 
         replay_buffer.add(last_obs, action, reward, obs, done)
 

@@ -124,8 +124,10 @@ dmypy.json
 # Pyre type checker
 .pyre/s
 
-Game Video/
+/Game_Video
 
+*.json
+*.mp4
 *.pkl
 
 .vscode/

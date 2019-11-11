@@ -74,6 +74,9 @@ def dqn_learn(
             print('Load target Q parameters ...')
             target.load_state_dict(torch.load('mario_target_Q_params.pkl'))
         return model, target
+    
+    def process_observation(obs):
+        return np.array(obs)[None][0]
 
     def get_batch(t):
         # Use the replay buffer to sample a batch of transitions
@@ -100,10 +103,11 @@ def dqn_learn(
         if len(episode_rewards) > 0:
             mean_episode_reward = np.mean(episode_rewards[-100:])
 
-        if(mean_episode_reward > best_mean_episode_reward and mean_episode_reward > 0 and best_mean_episode_reward > 0 and len(episode_rewards) > 100):
-            print("best reward saved: %f", mean_episode_reward)
-            torch.save(Q.state_dict(), 'nets/mario_Q_params_{}.pkl'.format((int(mean_episode_reward))))
-            torch.save(target_Q.state_dict(), 'nets/mario_target_Q_params_{}.pkl'.format((int(mean_episode_reward))))
+        if(mean_episode_reward > best_mean_episode_reward and mean_episode_reward > 0 and len(episode_rewards) > 100):
+            if int(mean_episode_reward) > 700:
+                print("best reward saved: %f", mean_episode_reward)
+                torch.save(Q.state_dict(), 'nets/mario_Q_params_{}.pkl'.format((int(mean_episode_reward))))
+                torch.save(target_Q.state_dict(), 'nets/mario_target_Q_params_{}.pkl'.format((int(mean_episode_reward))))
             best_mean_episode_reward = max(best_mean_episode_reward, mean_episode_reward)            
 
         # Statistic["mean_episode_rewards"].append(mean_episode_reward)
@@ -191,15 +195,16 @@ def dqn_learn(
     LOG_EVERY_N_STEPS = 10000
 
     for t in count():
-
+        # print(np.array(last_obs)[None][0].shape)
+        # break
         if t > learning_starts:
-            action = epsilon_greedy_action(Q, last_obs.transpose(2, 0, 1), t).numpy()[0, 0]
+            action = epsilon_greedy_action(Q, process_observation(last_obs).transpose(2, 0, 1), t).numpy()[0, 0]
         else:
             action = random.randrange(num_actions)
 
         obs, reward, done, _ = env.step(action)
 
-        replay_buffer.add(last_obs, action, reward, obs, done)
+        replay_buffer.add(process_observation(last_obs), action, reward, process_observation(obs), done)
 
         if done:
             obs = env.reset()

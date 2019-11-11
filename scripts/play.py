@@ -4,6 +4,7 @@ from itertools import count
 import torch
 import torch.autograd as autograd
 import random
+import numpy as np
 
 
 USE_CUDA = torch.cuda.is_available()
@@ -27,10 +28,13 @@ def dqn_play(
     num_actions = env.action_space.n
     eps = 0.05
 
+    def process_observation(obs):
+        return np.array(obs)[None][0]
+
     def load_model(model):
-        if os.path.isfile('mario_Q_params.pkl'):
+        if os.path.isfile('nets/mario_Q_params_2357.pkl'):
             print('Load Q parametets ...')
-            model.load_state_dict(torch.load('mario_Q_params.pkl'))
+            model.load_state_dict(torch.load('nets/mario_Q_params_2357.pkl'))
         return model
 
     def epsilon_greedy_action(model, obs):
@@ -54,9 +58,11 @@ def dqn_play(
         done = False
         acum_rew = 0
         obs = env.reset() 
+        obs = process_observation(obs)
         while not done:
             action = action = epsilon_greedy_action(Q, obs.transpose(2, 0, 1)).numpy()[0, 0]
             obs, reward, done, _ = env.step(action)
+            obs = process_observation(obs)
             acum_rew += reward
         print("episode: {} acum_reward = {}".format(i,acum_rew))
 

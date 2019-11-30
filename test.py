@@ -1,23 +1,25 @@
-from torch.utils.data import DataLoader
-from utils.GAN_utils import ImageDataset
-import torchvision.transforms as transforms
-import torch
+from nes_py.wrappers import JoypadSpace
+import gym_super_mario_bros
+from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
+from utils.downsample_wrapper import wrap_deepmind
+from utils.image2image_wrapper import wrapImage
+from gym import wrappers
 
-USE_CUDA = torch.cuda.is_available()
-N_CHANNELS = 1
-N_EPOCHS = 50
-BATCH_SIZE = 1
-LR = 0.0002
-DECAY_EPOCH = 25
-SIZE = 84
-N_CPU = 2
-EPOCH = 0
+env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
+env = wrap_deepmind(env)
+env = wrapImage(env)
+env = JoypadSpace(env, COMPLEX_MOVEMENT)
+expt_dir = 'Game_video'
+env = wrappers.Monitor(env, expt_dir, force=True, video_callable=lambda episode_id: True)
 
-transforms_ = [transforms.Grayscale(num_output_channels=1),
-               transforms.ToTensor()]
 
-dataloader = DataLoader(ImageDataset("data", transforms_=transforms_, mode='test'),
-                        batch_size=BATCH_SIZE, shuffle=False, num_workers=N_CPU)
+done = True
+for step in range(3):
+    if done:
+        state = env.reset()
+    # print(env.action_space.n)
+    state, reward, done, info = env.step(env.action_space.sample())
+    print(state)
+    env.render()
 
-for i, batch in enumerate(dataloader):
-    print(batch['X'].shape)
+env.close()

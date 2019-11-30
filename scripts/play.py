@@ -1,6 +1,4 @@
 import os
-from itertools import count
-
 import torch
 import torch.autograd as autograd
 import random
@@ -57,12 +55,11 @@ def dqn_play(
     for i in range(EPISODES):
         done = False
         acum_rew = 0
-        obs = env.reset() 
+        obs = env.reset()
         obs = process_observation(obs)
         while not done:
             action = action = epsilon_greedy_action(Q, obs.transpose(2, 0, 1)).numpy()[0, 0]
             obs, reward, done, _ = env.step(action)
             obs = process_observation(obs)
             acum_rew += reward
-        print("episode: {} acum_reward = {}".format(i,acum_rew))
-
+        print("episode: {} acum_reward = {}".format(i, acum_rew))

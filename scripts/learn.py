@@ -74,7 +74,7 @@ def dqn_learn(
             print('Load target Q parameters ...')
             target.load_state_dict(torch.load('nets/mario_target_Q_params_1282.pkl'))
         return model, target
-    
+
     def process_observation(obs):
         return np.array(obs)[None][0]
 

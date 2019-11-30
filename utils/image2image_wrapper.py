@@ -1,6 +1,5 @@
 import numpy as np
 import gym
-import matplotlib.pyplot as plt
 from torch.autograd import Variable
 import torch
 
@@ -30,9 +29,7 @@ def _process_image2image(obs):
         real_X = Variable(input_X.copy_(torch.from_numpy(obs2[i])))
         fake_Y = 0.5*(netG_X2Y(real_X).data + 1.0)
         obs2[i] = fake_Y.cpu().numpy()[0][0]
-    print("TEST shape 1:", obs2.shape)
-    obs2 = obs2.transpose(2, 0, 1)
-    print("TEST shape2:", obs2.shape)
+    obs2 = obs2.transpose(1, 2, 0)
     return obs2
 
 

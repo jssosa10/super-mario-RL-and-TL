@@ -5,7 +5,7 @@ from utils.downsample_wrapper import wrap_deepmind
 from utils.image2image_wrapper import wrapImage
 from gym import wrappers
 
-env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
+env = gym_super_mario_bros.make('SuperMarioBros-1-1-v1')
 env = wrap_deepmind(env)
 env = wrapImage(env)
 env = JoypadSpace(env, COMPLEX_MOVEMENT)

@@ -17,7 +17,7 @@ netG_X2Y.load_state_dict(torch.load("output/netG_X2Y.pkl"))
 netG_X2Y.eval()
 
 Tensor = torch.cuda.FloatTensor if USE_CUDA else torch.Tensor
-input_X = Tensor(4, N_CHANNELS, SIZE, SIZE)
+input_X = Tensor(1, N_CHANNELS, SIZE, SIZE)
 
 if USE_CUDA:
     netG_X2Y.cuda()
@@ -26,11 +26,13 @@ if USE_CUDA:
 def _process_image2image(obs):
     obs2 = np.array(obs)[None][0]
     obs2 = obs2.transpose(2, 0, 1)
-    real_X = Variable(input_X.copy_(obs2))
+    print("TEST SHAPE:", torch.from_numpy(obs2[0]).shape)
+    real_X = Variable(input_X.copy_(torch.from_numpy(obs2[0])))
     fake_Y = 0.5*(netG_X2Y(real_X).data + 1.0)
     plt.imshow(obs2[0], cmap="gray")
     plt.show()
-    plt.imshow(fake_Y[0], cmap="gray")
+    print("TEST shape output", fake_Y.cpu().numpy()[0][0].shape)
+    plt.imshow(fake_Y.cpu().numpy()[0][0], cmap="gray")
     plt.show()
     return obs
 

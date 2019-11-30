@@ -59,6 +59,7 @@ class ProcessFrame84(gym.Wrapper):
     def reset(self):
         return _process_frame84(self.env.reset())
 
+
 class FrameStack(gym.Wrapper):
     def __init__(self, env, k):
         """Stack k last frames.
@@ -87,6 +88,7 @@ class FrameStack(gym.Wrapper):
     def _get_ob(self):
         assert len(self.frames) == self.k
         return LazyFrames(list(self.frames))
+
 
 class LazyFrames(object):
     def __init__(self, frames):
@@ -128,5 +130,4 @@ def wrap_deepmind(env):
     env = MaxAndSkipEnv(env, skip=4)
     env = ProcessFrame84(env)
     env = FrameStack(env, 4)
-    # print(env)
     return env

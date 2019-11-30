@@ -24,7 +24,7 @@ ALPHA = 0.95
 ALPHA_P = 0.6
 EPS = 0.01
 
-env = gym_super_mario_bros.make('SuperMarioBros-1-1-v1')
+env = gym_super_mario_bros.make('SuperMarioBros-1-2-v1')
 env.seed(SEED)
 torch.manual_seed(SEED)
 np.random.seed(SEED)
@@ -40,8 +40,8 @@ optimizer_spec = OptimizerSpec(
     kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS),
 )
 
-exploration_schedule = LinearSchedule(4000000, 0.05, 0.05)
-annelation_schedule = LinearSchedule(4000000, 1.0, 0.4)
+exploration_schedule = LinearSchedule(2000000, 0.05, 0.05)
+annelation_schedule = LinearSchedule(2000000, 1.0, 0.4)
 
 dqn_learn(
     env=env,

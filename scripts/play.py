@@ -32,9 +32,9 @@ def dqn_play(
         return np.array(obs)[None][0]
 
     def load_model(model):
-        if os.path.isfile('nets/mario_Q_params_2357.pkl'):
+        if os.path.isfile('nets/mario_Q_params_1620.pkl'):
             print('Load Q parametets ...')
-            model.load_state_dict(torch.load('nets/mario_Q_params_2357.pkl'))
+            model.load_state_dict(torch.load('nets/mario_Q_params_1620.pkl'))
         return model
 
     def epsilon_greedy_action(model, obs):

@@ -67,12 +67,12 @@ def dqn_learn(
         return q_func(input_arg, num_actions).type(dtype), q_func(input_arg, num_actions).type(dtype)
 
     def load_previous_models(model, target):
-        if os.path.isfile('mario_Q_params.pkl'):
+        if os.path.isfile('nets/mario_Q_params_1282.pkl'):
             print('Load Q parametets ...')
-            model.load_state_dict(torch.load('mario_Q_params.pkl'))
-        if os.path.isfile('mario_target_Q_params.pkl'):
+            model.load_state_dict(torch.load('nets/mario_Q_params_1282.pkl'))
+        if os.path.isfile('nets/mario_target_Q_params_1282.pkl'):
             print('Load target Q parameters ...')
-            target.load_state_dict(torch.load('mario_target_Q_params.pkl'))
+            target.load_state_dict(torch.load('nets/mario_target_Q_params_1282.pkl'))
         return model, target
     
     def process_observation(obs):

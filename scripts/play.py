@@ -31,9 +31,9 @@ def dqn_play(
         return np.array(obs)[None][0]
 
     def load_model(model):
-        if os.path.isfile('nets/mario_Q_params_1620.pkl'):
+        if os.path.isfile('mario_Q_params_2357.pkl'):
             print('Load Q parametets ...')
-            model.load_state_dict(torch.load('nets/mario_Q_params_1620.pkl'))
+            model.load_state_dict(torch.load('mario_Q_params_2357.pkl'))
         return model
 
     def epsilon_greedy_action(model, obs):
@@ -50,7 +50,7 @@ def dqn_play(
     Q = q_func(input_arg, num_actions).type(dtype)
     Q = load_model(Q)
 
-    EPISODES = 200
+    EPISODES = 100
     obs = env.reset()
 
     for i in range(EPISODES):
@@ -60,7 +60,7 @@ def dqn_play(
         if not with_translation:
             obs = process_observation(obs)
         while not done:
-            action = action = epsilon_greedy_action(Q, obs.transpose(2, 0, 1)).numpy()[0, 0]
+            action = epsilon_greedy_action(Q, obs.transpose(2, 0, 1)).numpy()[0, 0]
             obs, reward, done, _ = env.step(action)
             if not with_translation:
                 obs = process_observation(obs)

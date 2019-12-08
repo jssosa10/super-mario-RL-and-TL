@@ -14,7 +14,7 @@ import random
 
 SEED = 1
 
-env = gym_super_mario_bros.make('SuperMarioBros-1-1-v1')
+env = gym_super_mario_bros.make('SuperMarioBros-1-2-v1')
 env.seed(SEED)
 torch.manual_seed(SEED)
 np.random.seed(SEED)
@@ -28,5 +28,5 @@ env = wrappers.Monitor(env, expt_dir, force=True, video_callable=lambda episode_
 dqn_play(
     env=env,
     q_func=DQN,
-    with_translation=True
+    with_translation=False
 )

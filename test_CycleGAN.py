@@ -6,6 +6,8 @@ from torchvision.utils import save_image
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 import torch
+import matplotlib.pyplot as plt
+
 
 from networks.CycleGan import Generator
 from utils.GAN_utils import ImageDataset
@@ -44,8 +46,7 @@ input_Y = Tensor(BATCH_SIZE, N_CHANNELS, SIZE, SIZE)
 
 # Dataset loader
 transforms_ = [transforms.Grayscale(num_output_channels=1),
-               transforms.ToTensor(),
-               transforms.Normalize([0.5], [0.5])]
+               transforms.ToTensor()]
 
 dataloader = DataLoader(ImageDataset("data", transforms_=transforms_, mode='test'),
                         batch_size=BATCH_SIZE, shuffle=False, num_workers=N_CPU)
@@ -72,13 +73,19 @@ for i, batch in enumerate(dataloader):
     fake_Y = 0.5*(netG_X2Y(real_X).data + 1.0)
     fake_X = 0.5*(netG_Y2X(real_Y).data + 1.0)
 
-    # Save image files
-    save_image(fake_X, 'output/X/%04d.png' % (i+1))
-    save_image(real_X, 'output/X_REAL/%04d.png' % (i+1))
-    save_image(fake_Y, 'output/Y/%04d.png' % (i+1))
-    save_image(real_Y, 'output/Y_REAL/%04d.png' % (i+1))
+    plt.imshow(real_Y.cpu().numpy()[0][0], cmap="gray")
+    plt.show()
 
-    sys.stdout.write('\rGenerated images %04d of %04d' % (i+1, len(dataloader)))
+    plt.imshow(fake_X.cpu().numpy()[0][0], cmap="gray")
+    plt.show()
+
+    # Save image files
+    #save_image(fake_X, 'output/X/%04d.png' % (i+1))
+    #save_image(real_X, 'output/X_REAL/%04d.png' % (i+1))
+    #save_image(fake_Y, 'output/Y/%04d.png' % (i+1))
+    #save_image(real_Y, 'output/Y_REAL/%04d.png' % (i+1))
+
+    #sys.stdout.write('\rGenerated images %04d of %04d' % (i+1, len(dataloader)))
 
 sys.stdout.write('\n')
 ###################################

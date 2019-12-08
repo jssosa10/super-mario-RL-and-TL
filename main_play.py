@@ -13,7 +13,7 @@ import random
 
 SEED = 1
 
-env = gym_super_mario_bros.make('SuperMarioBros-1-2-v1')
+env = gym_super_mario_bros.make('SuperMarioBros-1-1-v1')
 env.seed(SEED)
 torch.manual_seed(SEED)
 np.random.seed(SEED)
@@ -21,7 +21,7 @@ random.seed(SEED)
 
 env = wrap_deepmind(env)
 env = JoypadSpace(env, COMPLEX_MOVEMENT)
-expt_dir = 'Game_play2'
+expt_dir = 'Game_play3'
 env = wrappers.Monitor(env, expt_dir, force=True, video_callable=lambda episode_id: True)
 dqn_play(
     env=env,

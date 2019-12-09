@@ -138,3 +138,5 @@ dmypy.json
 /nets
 
 /Game_play
+
+*.pdf

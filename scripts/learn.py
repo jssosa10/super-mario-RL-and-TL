@@ -1,5 +1,5 @@
 import sys
-# import pickle
+import pickle
 import os
 import numpy as np
 from collections import namedtuple
@@ -57,22 +57,22 @@ def dqn_learn(
         if sample > eps:
 
             obs = torch.from_numpy(obs).type(dtype).unsqueeze(0)/255.0
-
-            return model(Variable(obs)).data.max(1)[1].view(-1, 1).cpu()
+            dqa = model(Variable(obs))
+            return dqa[-1].data.max(1)[1].view(-1, 1).cpu(), dqa
 
         else:
-            return torch.IntTensor([[random.randrange(num_actions)]]).cpu()
+            return torch.IntTensor([[random.randrange(num_actions)]]).cpu(), []
 
     def create_networks():
         return q_func(input_arg, num_actions).type(dtype), q_func(input_arg, num_actions).type(dtype)
 
     def load_previous_models(model, target):
-        if os.path.isfile('nets/mario_Q_params_1282.pkl'):
+        if os.path.isfile('nets/mario_Q_params_1285.pkl'):
             print('Load Q parametets ...')
-            model.load_state_dict(torch.load('nets/mario_Q_params_1282.pkl'))
-        if os.path.isfile('nets/mario_target_Q_params_1282.pkl'):
+            model.load_state_dict(torch.load('nets/mario_Q_params_1285.pkl'))
+        if os.path.isfile('nets/mario_target_Q_params_1285.pkl'):
             print('Load target Q parameters ...')
-            target.load_state_dict(torch.load('nets/mario_target_Q_params_1282.pkl'))
+            target.load_state_dict(torch.load('nets/mario_target_Q_params_1285.pkl'))
         return model, target
 
     def process_observation(obs):
@@ -132,7 +132,7 @@ def dqn_learn(
 
         # Compute current Q value, q_func takes only state and output value for every state-action pair
         # We choose Q based on action taken.
-        current_Q_values = model(obs_batch).gather(1, act_batch.view(-1, 1))
+        current_Q_values = model(obs_batch)[-1].gather(1, act_batch.view(-1, 1))
 
         """
         # DQN
@@ -141,8 +141,12 @@ def dqn_learn(
         next_max_q = target_Q(next_obs_batch).detach().max(1)[0].view(-1, 1)
         next_Q_values = not_done_mask.view(-1, 1) * next_max_q
         """
-        next_argmax_action = model(next_obs_batch).max(1)[1].view(-1, 1)
-        next_q = target(next_obs_batch).detach().gather(1, next_argmax_action)
+
+        ouput_model = model(next_obs_batch)
+        next_argmax_action = ouput_model[-1].max(1)[1].view(-1, 1)
+
+        ouput_target = target(next_obs_batch)
+        next_q = ouput_target[-1].detach().gather(1, next_argmax_action)
         next_Q_values = not_done_mask.view(-1, 1) * next_q
         # Compute the target of the current Q values
         target_Q_values = rew_batch.view(-1, 1) + (gamma * next_Q_values)
@@ -176,7 +180,7 @@ def dqn_learn(
         return num_param_updates+1
 
     Q, target_Q = create_networks()
-    Q, target_Q = load_previous_models(Q, target_Q)
+    # Q, target_Q = load_previous_models(Q, target_Q)
 
     # Construct Optimizer
     optimizer = optimizer_spec.constructor(Q.parameters(), **optimizer_spec.kwargs)
@@ -193,14 +197,13 @@ def dqn_learn(
     best_mean_episode_reward = -float('inf')
     last_obs = env.reset()
     LOG_EVERY_N_STEPS = 10000
+    epi = 0
+    tt = 0
 
-    for t in count():
-        # print(np.array(last_obs)[None][0].shape)
-        # break
-        if t > learning_starts:
-            action = epsilon_greedy_action(Q, process_observation(last_obs).transpose(2, 0, 1), t).numpy()[0, 0]
-        else:
-            action = random.randrange(num_actions)
+    Statistic = []
+    sumReward = 0.0
+    for x in range(learning_starts):
+        action = random.randrange(num_actions)
 
         obs, reward, done, _ = env.step(action)
 
@@ -208,10 +211,58 @@ def dqn_learn(
 
         if done:
             obs = env.reset()
+
+        last_obs = obs
+    while True:
+        action = random.randrange(num_actions)
+
+        obs, reward, done, _ = env.step(action)
+
+        if done:
+            break
+
+    last_obs = env.reset()
+
+    print("Init Train")
+
+    for t in count():
+
+        action, activations = epsilon_greedy_action(Q, process_observation(last_obs).transpose(2, 0, 1), t)
+        action = action.numpy()[0, 0]
+        activations = [x.detach().cpu().numpy() for x in activations]
+
+        obs, reward, done, _ = env.step(action)
+
+        replay_buffer.add(process_observation(last_obs), action, reward, process_observation(obs), done)
+        sumReward += reward
+
+        if len(activations)>0:
+            Statistic.append({
+                "reward":reward,
+                "rewardSum":sumReward,
+                "global_iteration": t,
+                "iteration": tt,
+                "episode": epi,
+                "index": 0,
+                "training_activations": activations,
+                "trained": False,
+                "testing_ended": False,
+                "testing_activations": None
+            })
+        tt += 1
+
+        if done:
+            obs = env.reset()
+            with open('activations/eps-{}.pkl'.format(epi), 'wb') as f:
+                pickle.dump(Statistic, f)
+                print("Saved to %s" % 'eps-{}.pkl'.format(epi))
+            epi += 1
+            tt = 0
+            Statistic = []
+            sumReward = 0.0
         last_obs = obs
 
-        if (t > learning_starts and
-                t % learning_freq == 0):
+        if (t % learning_freq == 0):
 
             num_param_updates = train_step(Q, target_Q, num_param_updates, t, writer)
 

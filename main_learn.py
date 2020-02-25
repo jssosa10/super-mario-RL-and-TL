@@ -4,7 +4,7 @@ from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
 from utils.downsample_wrapper import wrap_deepmind
 from utils.schedule import LinearSchedule
 from gym import wrappers
-from networks.DQN import DQN
+from networks.DQNV2 import DQN
 from scripts.learn import dqn_learn, OptimizerSpec
 import torch.optim as optim
 
@@ -24,7 +24,7 @@ ALPHA = 0.95
 ALPHA_P = 0.6
 EPS = 0.01
 
-env = gym_super_mario_bros.make('SuperMarioBros-1-2-v1')
+env = gym_super_mario_bros.make('SuperMarioBros-1-1-v1')
 env.seed(SEED)
 torch.manual_seed(SEED)
 np.random.seed(SEED)

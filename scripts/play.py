@@ -42,7 +42,7 @@ def dqn_play(
 
             obs = torch.from_numpy(obs).type(dtype).unsqueeze(0)/255.0
 
-            return model(Variable(obs)).data.max(1)[1].view(-1, 1).cpu()
+            return model(Variable(obs))[-1].data.max(1)[1].view(-1, 1).cpu()
 
         else:
             return torch.IntTensor([[random.randrange(num_actions)]]).cpu()
